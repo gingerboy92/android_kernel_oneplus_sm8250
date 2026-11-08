@@ -1,0 +1,38 @@
+name: build-kernel
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq clang lld binutils-aarch64-linux-gnu \
+            gcc-aarch64-linux-gnu make bc bison flex libssl-dev cpio
+
+      - name: Configure
+        run: |
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          export CC=clang CLANG_TRIPLE=aarch64-linux-gnu- LLVM_IAS=0 KCFLAGS="-Wno-error"
+          make ARCH=arm64 O=$PWD/out vendor/kona-perf_defconfig
+
+      - name: Build kernel
+        run: |
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          export CC=clang CLANG_TRIPLE=aarch64-linux-gnu- LLVM_IAS=0 KCFLAGS="-Wno-error"
+          make ARCH=arm64 O=$PWD/out -j$(nproc) Image
+
+      - name: Upload Image
+        uses: actions/upload-artifact@v4
+        with:
+          name: kimage
+          path: out/arch/arm64/boot/Image
+          if-no-files-found: error
