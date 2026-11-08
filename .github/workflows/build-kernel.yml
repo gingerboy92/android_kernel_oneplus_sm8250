@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -15,19 +15,19 @@ jobs:
       - name: Install toolchain
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq clang lld binutils-aarch64-linux-gnu \
+          sudo apt-get install -y -qq clang-12 lld-12 binutils-aarch64-linux-gnu \
             gcc-aarch64-linux-gnu make bc bison flex libssl-dev cpio
 
       - name: Configure
         run: |
           export CROSS_COMPILE=aarch64-linux-gnu-
-          export CC=clang CLANG_TRIPLE=aarch64-linux-gnu- LLVM_IAS=0 KCFLAGS="-Wno-error"
+          export CC=clang-12 CLANG_TRIPLE=aarch64-linux-gnu- LLVM_IAS=0 KCFLAGS="-Wno-error"
           make ARCH=arm64 O=$PWD/out vendor/kona-perf_defconfig
 
       - name: Build kernel
         run: |
           export CROSS_COMPILE=aarch64-linux-gnu-
-          export CC=clang CLANG_TRIPLE=aarch64-linux-gnu- LLVM_IAS=0 KCFLAGS="-Wno-error"
+          export CC=clang-12 CLANG_TRIPLE=aarch64-linux-gnu- LLVM_IAS=0 KCFLAGS="-Wno-error"
           make ARCH=arm64 O=$PWD/out -j$(nproc) Image
 
       - name: Upload Image
