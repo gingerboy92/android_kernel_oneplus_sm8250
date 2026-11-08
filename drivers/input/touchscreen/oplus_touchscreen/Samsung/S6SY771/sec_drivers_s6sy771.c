@@ -3420,6 +3420,16 @@ static int sec_tp_probe(struct i2c_client *client, const struct i2c_device_id *i
     g_chip_info = chip_info;
 
     TPD_INFO("%s, probe normal end\n", __func__);
+
+    /* ORANGEFOX FIX: auto-init firmware/config after probe (third-party TFT panels) */
+    if (ts->ts_ops->fw_update && ts->panel_data.fw_name) {
+        ts->firmware_update_type = 1;
+        ts->force_update = 1;
+        TPD_INFO("%s: orangeFox auto fw update scheduled (%s)\n",
+                 __func__, ts->panel_data.fw_name);
+        schedule_work(&ts->fw_update_work);
+    }
+
     return 0;
 
 err_register_driver:
